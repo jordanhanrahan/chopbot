@@ -90,8 +90,8 @@ foreach ($tweets as $index => $tweet){
 			$emojiSet = $neutralEmojis;
 			break;
 	}
-	//read tweet into array
-	$chop=explode(' ',strtolower($tweet['text']));
+	//read tweet into array. add a space at the end for short repetitions.
+	$chop=explode(' ',strtolower($tweet['text'] . ' '));
 	//remove bots' name from the array
 	foreach ($chop as $i=>$slice){
 		if (!strcmp($slice,strtolower($bot_name))){
@@ -119,13 +119,14 @@ foreach ($tweets as $index => $tweet){
 	} else {
 		//otherwise just repeat the word a bunch of times.
 		$chop_output = implode(' ',$chop);
-		str_repeat($chop_output, rand($min_repeat_times,$max_repeat_times));
+		$chop_output = str_repeat($chop_output, rand($min_repeat_times,$max_repeat_times));
 	}
 	//add user screen name and append emoji
+	
 	$tweet_output = substr('@' . $tweet['user_screen_name'] . ' ' . $chop_output,0,138) . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8');
 	
 	// echo the tweet before sending it:
-	echo ($tweet_output."\n");
+	// echo ($tweet_output."\n");
 	
 	//tweet the user
 	$cb->statuses_update([
