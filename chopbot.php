@@ -121,15 +121,20 @@ foreach ($tweets as $index => $tweet){
 		$chop_output = implode(' ',$chop);
 		$chop_output = str_repeat($chop_output, rand($min_repeat_times,$max_repeat_times));
 	}
-	//add user screen name and append emoji
+	//add username, trim to 140 chars and remove last word due incase it's cut off.
+	$preg_pattern = '/.*(?=\s)/';
+	preg_match ($preg_pattern,substr('@' . $tweet['user_screen_name'] . ' ' . $chop_output,0,138),$preg_output);
 	
-	$tweet_output = substr('@' . $tweet['user_screen_name'] . ' ' . $chop_output,0,138) . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8');
+	//append the emoji - cherry on top.
+	$tweet_output = $preg_output[0] . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8');
+	
+	//$tweet_output = substr('@' . $tweet['user_screen_name'] . ' ' . $chop_output,0,138) . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8');
 	
 	// echo the tweet before sending it:
-	// echo ($tweet_output."\n");
+	echo ($tweet_output."\n");
 	
 	//tweet the user
-	$cb->statuses_update([
+	/*$cb->statuses_update([
 		'status' => $tweet_output,
 		'in_reply_to_status_id' => $tweet['id'],
 	]);
@@ -137,5 +142,5 @@ foreach ($tweets as $index => $tweet){
 	//add the tweets we just replied to in the tracking log:
 	$fh = fopen($tracking_file, 'a') or die("can't write to tracking file");
 	fwrite($fh, $tweets[$index]['id']."\n");
-	fclose($fh);
+	fclose($fh);*/
 }
