@@ -14,17 +14,20 @@ $cb->setReturnFormat(CODEBIRD_RETURNFORMAT_ARRAY);
 
 $cb->setToken('785330899177000960-tZtzLNpTcRcmN8eXPLudxMp7MCVDxYV','jZvWgpD19W5rJtruW66I4szd5kSsN9uZVqXokRaFCrWqP');
 
-//get the id of the last replied to tweet from the tracking file:
+//rename to the twitter handle of the bot:
+$bot_name = "@chop_bot";
+//file for tracking which tweets we have replied to:
 $tracking_file = "tracking.log";
+//get the id of the last replied to tweet from the tracking file:
 $fa = file($tracking_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
 rsort($fa);
 //Latest tweet:
 //echo $fa[0];
 //get new mentions since the last replied id
 $mentions = $cb->statuses_mentionsTimeline($fa[0] ? 'since_id=' . $fa[0] : '');
-
 if (!isset($mentions[0])){
-	return;
+	//return;
+	die("uh-oh! something went wrong.");
 }
 
 $tweets = [];
@@ -87,15 +90,51 @@ foreach ($tweets as $index => $tweet){
 			$emojiSet = $neutralEmojis;
 			break;
 	}
+	//read tweet into array
+	$chop=explode(' ',strtolower($tweet['text']));
+	//remove bots' name from the array
+	foreach ($chop as $i=>$slice){
+		if (!strcmp($slice,strtolower($bot_name))){
+			unset($chop[$i]);
+		}
+	}
+	$min_repeat_times = 1;
+	$max_repeat_times = 6;
+	//check if the tweet is long enough to operate on:
+	if (count($chop)>2){
+		shuffle($chop);
+		//repeat a section at random:
+		$slice_start = rand(0,count($chop)-1);
+		$slice_stop = rand($slice_start, count($chop)+$slice_start);
+		//echo("slice_start:".$slice_start."\n");
+		//echo("slice_stop:".$slice_stop."\n");
+		$sliced = array_slice($chop, 0, $slice_start, true);	
+		for ($i = 0; $i <= rand($min_repeat_times,$max_repeat_times); $i++){
+			$sliced = array_merge($sliced,array_slice($chop, $slice_start,$slice_stop, true));
+		}
+		$sliced = array_merge($sliced, array_slice($chop, $slice_stop, count($chop)-1, true));
+		//form the word array back into a string, ready to tweet.
+		$chop_output=implode(' ',$sliced);
+		
+	} else {
+		//otherwise just repeat the word a bunch of times.
+		$chop_output = implode(' ',$chop);
+		str_repeat($chop_output, rand($min_repeat_times,$max_repeat_times));
+	}
+	//add user screen name and append emoji
+	$tweet_output = substr('@' . $tweet['user_screen_name'] . ' ' . $chop_output,0,138) . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8');
 	
+	// echo the tweet before sending it:
+	echo ($tweet_output."\n");
+	
+	//tweet the user
 	$cb->statuses_update([
-		'status' => '@' . $tweet['user_screen_name'] . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8'),
+		'status' => $tweet_output,
 		'in_reply_to_status_id' => $tweet['id'],
 	]);
 	
-	//tweet the user
 	//add the tweets we just replied to in the tracking log:
-	$fh = fopen($tracking_file, 'a') or die("can't open tracking file");
+	$fh = fopen($tracking_file, 'a') or die("can't write to tracking file");
 	fwrite($fh, $tweets[$index]['id']."\n");
 	fclose($fh);
 }
