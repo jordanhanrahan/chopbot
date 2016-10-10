@@ -91,7 +91,8 @@ foreach ($tweets as $index => $tweet){
 			break;
 	}
 	//read tweet into array. add a space at the end for short repetitions.
-	$chop=explode(' ',strtolower($tweet['text'] . ' '));
+	$chop=explode(' ',strtolower($tweet['text']));
+	$chop[count($chop)-1] .= ' ';
 	//remove bots' name from the array
 	foreach ($chop as $i=>$slice){
 		if (!strcmp($slice,strtolower($bot_name))){
