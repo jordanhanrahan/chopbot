@@ -14,7 +14,14 @@ $cb->setReturnFormat(CODEBIRD_RETURNFORMAT_ARRAY);
 
 $cb->setToken('785330899177000960-tZtzLNpTcRcmN8eXPLudxMp7MCVDxYV','jZvWgpD19W5rJtruW66I4szd5kSsN9uZVqXokRaFCrWqP');
 
-$mentions = $cb->statuses_mentionsTimeline();
+//get the id of the last replied to tweet from the tracking file:
+$tracking_file = "tracking.log";
+$fa = file($tracking_file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+rsort($fa);
+//Latest tweet:
+//echo $fa[0];
+//get new mentions since the last replied id
+$mentions = $cb->statuses_mentionsTimeline($fa[0] ? 'since_id=' . $fa[0] : '');
 
 if (!isset($mentions[0])){
 	return;
@@ -81,11 +88,14 @@ foreach ($tweets as $index => $tweet){
 			break;
 	}
 	
+	$cb->statuses_update([
+		'status' => '@' . $tweet['user_screen_name'] . ' ' . html_entity_decode($emojiSet[rand(0,count($emojiSet)-1)], 0, 'UTF-8'),
+		'in_reply_to_status_id' => $tweet['id'],
+	]);
+	
 	//tweet the user
-	//track
-	$tracking_file = "tracking.log";
+	//add the tweets we just replied to in the tracking log:
 	$fh = fopen($tracking_file, 'a') or die("can't open tracking file");
 	fwrite($fh, $tweets[$index]['id']."\n");
 	fclose($fh);
-	
 }
