@@ -135,7 +135,7 @@ foreach ($tweets as $index => $tweet){
 	echo ($tweet_output."\n");
 	
 	//tweet the user
-	/*$cb->statuses_update([
+	$cb->statuses_update([
 		'status' => $tweet_output,
 		'in_reply_to_status_id' => $tweet['id'],
 	]);
@@ -143,5 +143,5 @@ foreach ($tweets as $index => $tweet){
 	//add the tweets we just replied to in the tracking log:
 	$fh = fopen($tracking_file, 'a') or die("can't write to tracking file");
 	fwrite($fh, $tweets[$index]['id']."\n");
-	fclose($fh);*/
+	fclose($fh);
 }
